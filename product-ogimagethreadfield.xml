@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<product productid="thread_field" active="1">
+	<title>Open Graph Image Threadfield</title>
+	<description>Add Open Graph Image meta tag to threads</description>
+	<version>1.0</version>
+	<url />
+	<versioncheckurl />
+	<dependencies>
+		<dependency dependencytype="vbulletin" minversion="3.7.0" maxversion="4.0.0" />
+	</dependencies>
+	<codes>
+		<code version="1.0">
+			<installcode><![CDATA[$vbulletin->db->query_write("
+	ALTER TABLE " . TABLE_PREFIX . ".thread
+	ADD img VARCHAR(255) NOT NULL
+");]]></installcode>
+			<uninstallcode><![CDATA[$vbulletin->db->query_write("
+	ALTER TABLE " . TABLE_PREFIX . ".thread
+	DROP COLUMN img
+");]]></uninstallcode>
+		</code>
+	</codes>
+	<templates>
+	</templates>
+	<plugins>
+		<plugin active="1" executionorder="5">
+			<title>Image support in editpost template</title>
+			<hookname>editpost_edit_start</hookname>
+			<phpcode><![CDATA[if ($previewpost) {
+	$img = $edit['img'];
+} else {
+	$img = $threadinfo['img'];
+}]]></phpcode>
+		</plugin>
+		<plugin active="1" executionorder="5">
+			<title>Clean image when editing first post</title>
+			<hookname>editpost_update_start</hookname>
+			<phpcode><![CDATA[$edit['img'] = $vbulletin->input->clean_gpc('p', 'img', TYPE_STR);]]></phpcode>
+		</plugin>
+		<plugin active="1" executionorder="5">
+			<title>Save image when editing first post</title>
+			<hookname>editpost_update_thread</hookname>
+			<phpcode><![CDATA[if ($threadinfo['firstpostid'] == $postinfo['postid']) {
+	$threadman->set('img', $edit['img']);
+}]]></phpcode>
+		</plugin>
+		<plugin active="1" executionorder="5">
+			<title>Save image when posting new thread</title>
+			<hookname>newpost_process</hookname>
+			<phpcode><![CDATA[if ($type == 'thread') {
+	$dataman->setr('img', $post['img']);
+}]]></phpcode>
+		</plugin>
+		<plugin active="1" executionorder="5">
+			<title>Clean image when posting new thread</title>
+			<hookname>newthread_post_start</hookname>
+			<phpcode><![CDATA[$vbulletin->input->clean_gpc('p', 'img', TYPE_STR);
+
+$newpost['img'] = $vbulletin->GPC['img'];]]></phpcode>
+		</plugin>
+		<plugin active="1" executionorder="5">
+			<title>Set image as valid field for thread</title>
+			<hookname>threaddata_start</hookname>
+			<phpcode><![CDATA[$this->validfields['img'] = array(TYPE_STR, REQ_NO);]]></phpcode>
+		</plugin>
+		<plugin active="1" executionorder="5">
+			<title>Set image as valid field for thread and first post</title>
+			<hookname>threadfpdata_start</hookname>
+			<phpcode><![CDATA[$this->validfields['img'] = array(TYPE_STR, REQ_NO);]]></phpcode>
+		</plugin>
+		<plugin active="1" executionorder="5">
+			<title>Clean and save image to database when editing thread</title>
+			<hookname>threadmanage_update</hookname>
+			<phpcode><![CDATA[$vbulletin->input->clean_gpc('p', 'img', TYPE_STR);
+
+$threadman->set('img', $vbulletin->GPC['img']);]]></phpcode>
+		</plugin>
+	</plugins>
+	<phrases>
+	</phrases>
+	<options>
+	</options>
+	<helptopics>
+	</helptopics>
+	<cronentries>
+	</cronentries>
+	<faqentries>
+	</faqentries>
+</product>
